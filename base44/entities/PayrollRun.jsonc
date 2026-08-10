@@ -1,0 +1,99 @@
+{
+  "name": "PayrollRun",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "period_name": {
+      "type": "string",
+      "title": "Period Name"
+    },
+    "period_start": {
+      "type": "string",
+      "format": "date",
+      "title": "Period Start"
+    },
+    "period_end": {
+      "type": "string",
+      "format": "date",
+      "title": "Period End"
+    },
+    "pay_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Pay Date"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "weekly",
+        "fortnightly"
+      ],
+      "default": "monthly",
+      "title": "Frequency"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "validating",
+        "validation_failed",
+        "calculated",
+        "review_required",
+        "approved",
+        "completed",
+        "locked"
+      ],
+      "default": "draft",
+      "title": "Status"
+    },
+    "gross_total": {
+      "type": "number",
+      "default": 0,
+      "title": "Gross Total"
+    },
+    "paye_total": {
+      "type": "number",
+      "default": 0,
+      "title": "PAYE Total"
+    },
+    "uif_total": {
+      "type": "number",
+      "default": 0,
+      "title": "UIF Total"
+    },
+    "sdl_total": {
+      "type": "number",
+      "default": 0,
+      "title": "SDL Total"
+    },
+    "net_total": {
+      "type": "number",
+      "default": 0,
+      "title": "Net Total"
+    },
+    "employee_count": {
+      "type": "integer",
+      "default": 0,
+      "title": "Employee Count"
+    },
+    "exceptions_count": {
+      "type": "integer",
+      "default": 0,
+      "title": "Exceptions Count"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "business_id",
+    "period_start",
+    "period_end",
+    "pay_date"
+  ]
+}

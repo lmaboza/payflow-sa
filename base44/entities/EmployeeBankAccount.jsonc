@@ -1,0 +1,42 @@
+{
+  "name": "EmployeeBankAccount",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "bank_name": {
+      "type": "string",
+      "title": "Bank Name"
+    },
+    "account_number": {
+      "type": "string",
+      "title": "Account Number"
+    },
+    "account_type": {
+      "type": "string",
+      "enum": [
+        "cheque",
+        "savings",
+        "transmission"
+      ],
+      "default": "cheque",
+      "title": "Account Type"
+    },
+    "branch_code": {
+      "type": "string",
+      "title": "Branch Code"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "bank_name",
+    "account_number"
+  ]
+}

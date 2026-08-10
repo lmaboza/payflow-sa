@@ -1,0 +1,173 @@
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_number": {
+      "type": "string",
+      "title": "Employee Number"
+    },
+    "first_name": {
+      "type": "string",
+      "title": "First Name"
+    },
+    "last_name": {
+      "type": "string",
+      "title": "Last Name"
+    },
+    "id_number": {
+      "type": "string",
+      "title": "ID Number"
+    },
+    "passport_number": {
+      "type": "string",
+      "title": "Passport Number"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "title": "Date of Birth"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+    },
+    "mobile": {
+      "type": "string",
+      "title": "Mobile"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    },
+    "employment_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Employment Date"
+    },
+    "termination_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Termination Date"
+    },
+    "employment_type": {
+      "type": "string",
+      "enum": [
+        "permanent",
+        "fixed_term",
+        "casual",
+        "contractor"
+      ],
+      "default": "permanent",
+      "title": "Employment Type"
+    },
+    "department_id": {
+      "type": "string",
+      "title": "Department"
+    },
+    "position_id": {
+      "type": "string",
+      "title": "Position"
+    },
+    "manager_id": {
+      "type": "string",
+      "title": "Manager"
+    },
+    "branch_id": {
+      "type": "string",
+      "title": "Branch"
+    },
+    "basic_salary": {
+      "type": "number",
+      "title": "Basic Salary"
+    },
+    "pay_frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "weekly",
+        "fortnightly"
+      ],
+      "default": "monthly",
+      "title": "Pay Frequency"
+    },
+    "tax_number": {
+      "type": "string",
+      "title": "Tax Number"
+    },
+    "tax_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "provisional"
+      ],
+      "default": "active",
+      "title": "Tax Status"
+    },
+    "uif_status": {
+      "type": "string",
+      "enum": [
+        "contributing",
+        "exempt",
+        "ceased"
+      ],
+      "default": "contributing",
+      "title": "UIF Status"
+    },
+    "sdl_status": {
+      "type": "string",
+      "enum": [
+        "liable",
+        "exempt"
+      ],
+      "default": "liable",
+      "title": "SDL Status"
+    },
+    "eti_eligible": {
+      "type": "boolean",
+      "default": false,
+      "title": "ETI Eligible"
+    },
+    "allowances": {
+      "type": "number",
+      "default": 0,
+      "title": "Allowances"
+    },
+    "deductions": {
+      "type": "number",
+      "default": 0,
+      "title": "Deductions"
+    },
+    "medical_aid": {
+      "type": "number",
+      "default": 0,
+      "title": "Medical Aid"
+    },
+    "retirement_contribution": {
+      "type": "number",
+      "default": 0,
+      "title": "Retirement Contribution"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "archived",
+        "terminated"
+      ],
+      "default": "active",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "business_id",
+    "first_name",
+    "last_name",
+    "employee_number"
+  ]
+}

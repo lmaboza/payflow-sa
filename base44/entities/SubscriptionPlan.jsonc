@@ -1,0 +1,35 @@
+{
+  "name": "SubscriptionPlan",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Plan Name"
+    },
+    "price": {
+      "type": "number",
+      "title": "Price (ZAR)"
+    },
+    "billing_cycle": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "default": "monthly",
+      "title": "Billing Cycle"
+    },
+    "features": {
+      "type": "string",
+      "title": "Features"
+    },
+    "max_employees": {
+      "type": "integer",
+      "title": "Max Employees"
+    }
+  },
+  "required": [
+    "name",
+    "price"
+  ]
+}

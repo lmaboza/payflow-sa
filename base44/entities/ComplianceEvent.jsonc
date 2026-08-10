@@ -1,0 +1,62 @@
+{
+  "name": "ComplianceEvent",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "PAYE",
+        "UIF",
+        "SDL",
+        "EMP201",
+        "EMP501",
+        "IRP5",
+        "IT3A",
+        "ETI",
+        "TaxNumbers"
+      ],
+      "title": "Type"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "compliant",
+        "action_required",
+        "overdue",
+        "pending"
+      ],
+      "default": "compliant",
+      "title": "Status"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Due Date"
+    },
+    "responsible_user_id": {
+      "type": "string",
+      "title": "Responsible User"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Last Updated"
+    },
+    "action_required": {
+      "type": "string",
+      "title": "Action Required"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    }
+  },
+  "required": [
+    "business_id",
+    "type"
+  ]
+}

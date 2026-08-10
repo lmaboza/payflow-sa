@@ -1,0 +1,95 @@
+{
+  "name": "PayrollLineItem",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "payroll_run_id": {
+      "type": "string",
+      "title": "Payroll Run"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "title": "Employee Name"
+    },
+    "basic_salary": {
+      "type": "number",
+      "default": 0,
+      "title": "Basic Salary"
+    },
+    "allowances": {
+      "type": "number",
+      "default": 0,
+      "title": "Allowances"
+    },
+    "overtime": {
+      "type": "number",
+      "default": 0,
+      "title": "Overtime"
+    },
+    "bonus": {
+      "type": "number",
+      "default": 0,
+      "title": "Bonus"
+    },
+    "gross_pay": {
+      "type": "number",
+      "default": 0,
+      "title": "Gross Pay"
+    },
+    "paye": {
+      "type": "number",
+      "default": 0,
+      "title": "PAYE"
+    },
+    "uif": {
+      "type": "number",
+      "default": 0,
+      "title": "UIF"
+    },
+    "sdl": {
+      "type": "number",
+      "default": 0,
+      "title": "SDL"
+    },
+    "other_deductions": {
+      "type": "number",
+      "default": 0,
+      "title": "Other Deductions"
+    },
+    "net_pay": {
+      "type": "number",
+      "default": 0,
+      "title": "Net Pay"
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "title": "Exceptions"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ok",
+        "review",
+        "error"
+      ],
+      "default": "ok",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "business_id",
+    "payroll_run_id",
+    "employee_id"
+  ]
+}

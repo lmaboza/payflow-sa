@@ -1,0 +1,45 @@
+{
+  "name": "EmployeeDocument",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "name": {
+      "type": "string",
+      "title": "Document Name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "contract",
+        "id",
+        "tax",
+        "bank",
+        "other"
+      ],
+      "default": "other",
+      "title": "Type"
+    },
+    "file_url": {
+      "type": "string",
+      "title": "File URL"
+    },
+    "uploaded_date": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Uploaded Date"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "name",
+    "file_url"
+  ]
+}

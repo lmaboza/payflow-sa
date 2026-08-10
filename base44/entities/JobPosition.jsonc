@@ -1,0 +1,22 @@
+{
+  "name": "JobPosition",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "department_id": {
+      "type": "string",
+      "title": "Department"
+    }
+  },
+  "required": [
+    "business_id",
+    "title"
+  ]
+}

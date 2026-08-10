@@ -1,0 +1,43 @@
+{
+  "name": "PayrollAdjustment",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "payroll_run_id": {
+      "type": "string",
+      "title": "Payroll Run"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "allowance",
+        "deduction",
+        "bonus",
+        "overtime"
+      ],
+      "title": "Type"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "amount": {
+      "type": "number",
+      "title": "Amount"
+    }
+  },
+  "required": [
+    "business_id",
+    "payroll_run_id",
+    "employee_id",
+    "type",
+    "amount"
+  ]
+}

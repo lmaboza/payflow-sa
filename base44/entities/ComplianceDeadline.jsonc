@@ -1,0 +1,50 @@
+{
+  "name": "ComplianceDeadline",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "PAYE",
+        "UIF",
+        "SDL",
+        "EMP201",
+        "EMP501",
+        "IRP5",
+        "IT3A",
+        "ETI",
+        "TaxNumbers"
+      ],
+      "title": "Type"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Due Date"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "due",
+        "overdue",
+        "completed"
+      ],
+      "default": "upcoming",
+      "title": "Status"
+    }
+  },
+  "required": [
+    "business_id",
+    "type",
+    "due_date"
+  ]
+}

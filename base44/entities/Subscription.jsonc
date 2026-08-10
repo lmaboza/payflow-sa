@@ -1,0 +1,43 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "plan_id": {
+      "type": "string",
+      "title": "Plan"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trialing",
+        "cancelled",
+        "expired"
+      ],
+      "default": "trialing",
+      "title": "Status"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "title": "End Date"
+    },
+    "seats": {
+      "type": "integer",
+      "default": 1,
+      "title": "Seats"
+    }
+  },
+  "required": [
+    "business_id"
+  ]
+}

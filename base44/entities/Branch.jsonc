@@ -1,0 +1,22 @@
+{
+  "name": "Branch",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "address": {
+      "type": "string",
+      "title": "Address"
+    }
+  },
+  "required": [
+    "business_id",
+    "name"
+  ]
+}

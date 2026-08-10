@@ -1,0 +1,56 @@
+{
+  "name": "EmployeeTaxProfile",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "tax_number": {
+      "type": "string",
+      "title": "Tax Number"
+    },
+    "tax_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "provisional"
+      ],
+      "default": "active",
+      "title": "Tax Status"
+    },
+    "uif_status": {
+      "type": "string",
+      "enum": [
+        "contributing",
+        "exempt",
+        "ceased"
+      ],
+      "default": "contributing",
+      "title": "UIF Status"
+    },
+    "sdl_status": {
+      "type": "string",
+      "enum": [
+        "liable",
+        "exempt"
+      ],
+      "default": "liable",
+      "title": "SDL Status"
+    },
+    "eti_eligible": {
+      "type": "boolean",
+      "default": false,
+      "title": "ETI Eligible"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id"
+  ]
+}

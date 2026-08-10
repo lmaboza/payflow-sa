@@ -1,0 +1,98 @@
+{
+  "name": "Payslip",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "payroll_run_id": {
+      "type": "string",
+      "title": "Payroll Run"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "pay_period_start": {
+      "type": "string",
+      "format": "date",
+      "title": "Period Start"
+    },
+    "pay_period_end": {
+      "type": "string",
+      "format": "date",
+      "title": "Period End"
+    },
+    "pay_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Pay Date"
+    },
+    "basic_salary": {
+      "type": "number",
+      "default": 0,
+      "title": "Basic Salary"
+    },
+    "allowances": {
+      "type": "number",
+      "default": 0,
+      "title": "Allowances"
+    },
+    "overtime": {
+      "type": "number",
+      "default": 0,
+      "title": "Overtime"
+    },
+    "bonus": {
+      "type": "number",
+      "default": 0,
+      "title": "Bonus"
+    },
+    "gross_salary": {
+      "type": "number",
+      "default": 0,
+      "title": "Gross Salary"
+    },
+    "paye": {
+      "type": "number",
+      "default": 0,
+      "title": "PAYE"
+    },
+    "uif": {
+      "type": "number",
+      "default": 0,
+      "title": "UIF"
+    },
+    "other_deductions": {
+      "type": "number",
+      "default": 0,
+      "title": "Other Deductions"
+    },
+    "net_salary": {
+      "type": "number",
+      "default": 0,
+      "title": "Net Salary"
+    },
+    "ytd_gross": {
+      "type": "number",
+      "default": 0,
+      "title": "YTD Gross"
+    },
+    "ytd_paye": {
+      "type": "number",
+      "default": 0,
+      "title": "YTD PAYE"
+    },
+    "ytd_uif": {
+      "type": "number",
+      "default": 0,
+      "title": "YTD UIF"
+    }
+  },
+  "required": [
+    "business_id",
+    "payroll_run_id",
+    "employee_id"
+  ]
+}

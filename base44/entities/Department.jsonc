@@ -1,0 +1,22 @@
+{
+  "name": "Department",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "name": {
+      "type": "string",
+      "title": "Name"
+    },
+    "manager_id": {
+      "type": "string",
+      "title": "Manager"
+    }
+  },
+  "required": [
+    "business_id",
+    "name"
+  ]
+}

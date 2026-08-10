@@ -1,0 +1,90 @@
+{
+  "name": "Business",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Company Name"
+    },
+    "trading_name": {
+      "type": "string",
+      "title": "Trading Name"
+    },
+    "registration_number": {
+      "type": "string",
+      "title": "Registration Number"
+    },
+    "industry": {
+      "type": "string",
+      "title": "Industry"
+    },
+    "address": {
+      "type": "string",
+      "title": "Business Address"
+    },
+    "province": {
+      "type": "string",
+      "title": "Province"
+    },
+    "contact_person": {
+      "type": "string",
+      "title": "Contact Person"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "title": "Email"
+    },
+    "phone": {
+      "type": "string",
+      "title": "Phone"
+    },
+    "paye_reference": {
+      "type": "string",
+      "title": "PAYE Reference"
+    },
+    "uif_reference": {
+      "type": "string",
+      "title": "UIF Reference"
+    },
+    "sdl_number": {
+      "type": "string",
+      "title": "SDL Number"
+    },
+    "financial_year_start": {
+      "type": "string",
+      "format": "date",
+      "title": "Financial Year Start"
+    },
+    "payroll_frequency": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "weekly",
+        "fortnightly"
+      ],
+      "default": "monthly",
+      "title": "Payroll Frequency"
+    },
+    "default_pay_date": {
+      "type": "integer",
+      "title": "Default Pay Date (day of month)"
+    },
+    "default_working_hours": {
+      "type": "number",
+      "title": "Default Working Hours"
+    },
+    "default_overtime_rate": {
+      "type": "number",
+      "title": "Default Overtime Rate (x)"
+    },
+    "onboarding_complete": {
+      "type": "boolean",
+      "default": false,
+      "title": "Onboarding Complete"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

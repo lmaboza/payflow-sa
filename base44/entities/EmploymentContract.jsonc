@@ -1,0 +1,45 @@
+{
+  "name": "EmploymentContract",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "contract_type": {
+      "type": "string",
+      "enum": [
+        "permanent",
+        "fixed_term",
+        "probation",
+        "casual"
+      ],
+      "default": "permanent",
+      "title": "Contract Type"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "title": "End Date"
+    },
+    "basic_salary": {
+      "type": "number",
+      "title": "Basic Salary"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "contract_type",
+    "start_date"
+  ]
+}
