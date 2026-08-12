@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { isMock, mockHealth, mockValidate, mockCalculate, mockApprove, mockPayslip, mockCompliance } from '../../shared/mockEngine.ts';
 
 const ENDPOINTS = {
   health: '/api/v1/health',
@@ -38,6 +39,9 @@ export default async function(req) {
     if (engineKey) headers['Authorization'] = `Bearer ${engineKey}`;
 
     if (action === 'health') {
+      if (isMock(engineUrl)) {
+        return Response.json(mockHealth());
+      }
       if (!engineUrl) {
         return Response.json({
           status: 'offline',
@@ -67,6 +71,12 @@ export default async function(req) {
         reason: 'not_configured',
         message: 'Payroll Engine URL is not configured. Set it under Settings → Payroll Engine.'
       }, { status: 503 });
+    }
+
+    if (isMock(engineUrl)) {
+      const mock = { health: mockHealth, validate: mockValidate, calculate: mockCalculate, approve: mockApprove, payslip: mockPayslip, compliance: mockCompliance }[action];
+      if (!mock) return Response.json({ error: `unknown action: ${action}` }, { status: 400 });
+      return Response.json(mock(data));
     }
 
     const path = ENDPOINTS[action];
