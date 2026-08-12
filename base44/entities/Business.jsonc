@@ -82,6 +82,14 @@
       "type": "boolean",
       "default": false,
       "title": "Onboarding Complete"
+    },
+    "engine_url": {
+      "type": "string",
+      "title": "Payroll Engine URL"
+    },
+    "engine_api_key": {
+      "type": "string",
+      "title": "Payroll Engine API Key"
     }
   },
   "required": [

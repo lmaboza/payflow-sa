@@ -1,12 +1,31 @@
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
 // Add page imports here
+import ProtectedRoute from '@/components/ProtectedRoute';
+import Layout from '@/components/Layout';
+import Onboarding from '@/pages/Onboarding';
+import Dashboard from '@/pages/Dashboard';
+import Employees from '@/pages/Employees';
+import EmployeeImport from '@/pages/EmployeeImport';
+import EmployeeProfile from '@/pages/EmployeeProfile';
+import Payroll from '@/pages/Payroll';
+import PayrollReview from '@/pages/PayrollReview';
+import Payslips from '@/pages/Payslips';
+import Reports from '@/pages/Reports';
+import Compliance from '@/pages/Compliance';
+import Documents from '@/pages/Documents';
+import Settings from '@/pages/Settings';
+import AuditLog from '@/pages/AuditLog';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -34,7 +53,27 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      {/* Add your page Route elements here */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/payroll" element={<Payroll />} />
+          <Route path="/payroll/run/:id" element={<PayrollReview />} />
+          <Route path="/employees" element={<Employees />} />
+          <Route path="/employees/import" element={<EmployeeImport />} />
+          <Route path="/employees/:id" element={<EmployeeProfile />} />
+          <Route path="/payslips" element={<Payslips />} />
+          <Route path="/reports" element={<Reports />} />
+          <Route path="/compliance" element={<Compliance />} />
+          <Route path="/documents" element={<Documents />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/audit" element={<AuditLog />} />
+        </Route>
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

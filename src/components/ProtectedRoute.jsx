@@ -1,36 +1,29 @@
-import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
-import { useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { useEffect, useState } from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 
-const DefaultFallback = () => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-  </div>
-);
-
-export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
-  const { isAuthenticated, isLoadingAuth, authChecked, authError, checkUserAuth } = useAuth();
+export default function ProtectedRoute({ unauthenticatedElement }) {
+  const [state, setState] = useState("loading");
+  const location = useLocation();
 
   useEffect(() => {
-    if (!authChecked && !isLoadingAuth) {
-      checkUserAuth();
-    }
-  }, [authChecked, isLoadingAuth, checkUserAuth]);
+    let active = true;
+    base44.auth.isAuthenticated().then((ok) => {
+      if (active) setState(ok ? "authed" : "unauthed");
+    });
+    return () => { active = false; };
+  }, []);
 
-  if (isLoadingAuth || !authChecked) {
-    return fallback;
+  if (state === "loading") {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" />
+      </div>
+    );
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
-    return unauthenticatedElement;
-  }
-
-  if (!isAuthenticated) {
-    return unauthenticatedElement;
+  if (state === "unauthed") {
+    return unauthenticatedElement || <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   return <Outlet />;
