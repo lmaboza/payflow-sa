@@ -20,19 +20,25 @@ export default function EngineStatusBadge({ businessId }) {
 
   const connected = state.status === "connected";
   const dot = connected ? "bg-emerald-500" : state.status === "checking" ? "bg-amber-400" : "bg-rose-500";
-  const label = connected ? "Engine Connected" : state.status === "checking" ? "Checking Engine…" : "Engine Offline";
+  const label = connected ? "Engine Connected" : state.status === "checking" ? "Checking…" : "Engine Offline";
+  const chip = connected
+    ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+    : state.status === "checking"
+      ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+      : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100";
 
   return (
     <Link
       to="/settings"
-      className="group inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground transition hover:border-primary/30 hover:bg-accent"
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${chip}`}
       title={state.message || label}
     >
       <span className={`relative flex h-2 w-2`}>
-        <span className={`absolute inline-flex h-full w-full rounded-full ${dot} ${connected ? "opacity-75 animate-ping" : ""}`} />
+        {connected && <span className={`absolute inline-flex h-full w-full rounded-full ${dot} opacity-75 animate-ping`} />}
         <span className={`relative inline-flex h-2 w-2 rounded-full ${dot}`} />
       </span>
-      <span className="hidden sm:inline">{label}</span>
+      <span className="hidden md:inline">{label}</span>
+      <span className="md:hidden">{connected ? "Connected" : "Offline"}</span>
     </Link>
   );
 }

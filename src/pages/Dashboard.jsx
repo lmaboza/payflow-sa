@@ -1,197 +1,155 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useBusiness } from "@/lib/useBusiness";
-import PageHeader from "@/components/PageHeader";
-import EmptyState from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatZAR, formatDate, formatDateTime } from "@/lib/format";
-import { payrollHealth, payrollStatusMeta, complianceStatusMeta } from "@/lib/status";
+import { engineHealth } from "@/lib/payrollEngine";
 import { can } from "@/lib/permissions";
-import {
-  Users, Wallet, Receipt, ShieldCheck, AlertTriangle, Play, ArrowRight,
-  CalendarClock, Activity, TrendingUp
-} from "lucide-react";
+import { Play, ChevronDown } from "lucide-react";
+import CurrentPayrollHero from "@/components/dashboard/CurrentPayrollHero";
+import KpiCards from "@/components/dashboard/KpiCards";
+import PayrollCostTrend from "@/components/dashboard/PayrollCostTrend";
+import PayrollReadiness from "@/components/dashboard/PayrollReadiness";
+import ComplianceOverview from "@/components/dashboard/ComplianceOverview";
+import OutstandingActions from "@/components/dashboard/OutstandingActions";
+import RecentActivity from "@/components/dashboard/RecentActivity";
+import SystemStatus from "@/components/dashboard/SystemStatus";
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function currentMonthLabel() {
+  return new Date().toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
+}
+
+function SkeletonBlock({ className = "" }) {
+  return <div className={`animate-pulse rounded-xl bg-slate-200/70 ${className}`} />;
+}
 
 export default function Dashboard() {
   const { user, business } = useBusiness();
   const navigate = useNavigate();
-  const [data, setData] = useState({ employees: [], runs: [], compliance: [], audit: [] });
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!business?.id) return;
+    let active = true;
     (async () => {
       try {
-        const [employees, runs, compliance, audit] = await Promise.all([
+        const [employees, runs, compliance, audit, bankAccounts] = await Promise.all([
           base44.entities.Employee.filter({ business_id: business.id, status: "active" }),
-          base44.entities.PayrollRun.filter({ business_id: business.id }, "-created_date", 10),
+          base44.entities.PayrollRun.filter({ business_id: business.id }, "-created_date", 50),
           base44.entities.ComplianceEvent.filter({ business_id: business.id }),
-          base44.entities.AuditLog.filter({ business_id: business.id }, "-date_time", 6)
+          base44.entities.AuditLog.filter({ business_id: business.id }, "-date_time", 8),
+          base44.entities.EmployeeBankAccount.filter({ business_id: business.id })
         ]);
-        setData({ employees, runs, compliance, audit });
-      } catch (e) {
+        let health = null;
+        try { health = await engineHealth(business.id); } catch { health = { status: "offline" }; }
+        if (!active) return;
+        setData({ employees, runs, compliance, audit, bankAccounts, health, checkedAt: new Date() });
+      } catch {
+        if (active) setData({ employees: [], runs: [], compliance: [], audit: [], bankAccounts: [], health: { status: "offline" }, checkedAt: new Date() });
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     })();
+    return () => { active = false; };
   }, [business?.id]);
 
-  const role = user?.app_role || "business_owner";
-  const latest = data.runs[0];
-  const health = payrollHealth(latest);
-  const totals = latest || {};
-  const overdueCompliance = data.compliance.filter((c) => c.status === "overdue" || c.status === "action_required");
-
-  const stats = [
-    { label: "Active Employees", value: data.employees.length, icon: Users, accent: "text-blue-600 bg-blue-50" },
-    { label: "Gross Payroll", value: formatZAR(totals.gross_total), icon: Wallet, accent: "text-slate-700 bg-slate-100" },
-    { label: "PAYE", value: formatZAR(totals.paye_total), icon: Receipt, accent: "text-violet-600 bg-violet-50" },
-    { label: "UIF", value: formatZAR(totals.uif_total), icon: ShieldCheck, accent: "text-amber-600 bg-amber-50" },
-    { label: "SDL", value: formatZAR(totals.sdl_total), icon: ShieldCheck, accent: "text-emerald-600 bg-emerald-50" },
-    { label: "Net Payroll", value: formatZAR(totals.net_total), icon: TrendingUp, accent: "text-emerald-700 bg-emerald-50" }
-  ];
-
-  if (loading) {
-    return <div className="flex h-64 items-center justify-center"><div className="w-7 h-7 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" /></div>;
+  if (loading || !data) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <SkeletonBlock className="h-8 w-64" />
+            <SkeletonBlock className="h-4 w-80" />
+          </div>
+          <SkeletonBlock className="h-10 w-36" />
+        </div>
+        <SkeletonBlock className="h-56 w-full" />
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonBlock key={i} className="h-28" />)}
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <SkeletonBlock className="h-80 lg:col-span-2" />
+          <SkeletonBlock className="h-80" />
+        </div>
+      </div>
+    );
   }
 
-  return (
-    <div>
-      <PageHeader
-        title="Dashboard"
-        subtitle={`Welcome back, ${user?.full_name?.split(" ")[0] || "there"}.`}
-        actions={
-          can(role, "run_payroll") && (
-            <Button onClick={() => navigate("/payroll")} className="gap-2">
-              <Play className="h-4 w-4" /> Run Payroll
-            </Button>
-          )
-        }
-      />
+  const role = user?.app_role || "business_owner";
+  const canRunPayroll = can(role, "run_payroll");
+  const engineConnected = data.health?.status === "connected";
 
-      {/* Payroll health banner */}
-      <div className="mb-8 flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <span className={`h-3 w-3 rounded-full ${health.dot || "bg-slate-400"}`} />
-          <div>
-            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Payroll Health</div>
-            <div className="font-heading text-lg font-semibold text-foreground">{health.label}</div>
-          </div>
-          {latest && (
-            <div className="ml-2 hidden border-l border-border pl-4 sm:block">
-              <div className="text-xs text-muted-foreground">Current Period</div>
-              <div className="text-sm font-medium text-foreground">{latest.period_name || `${formatDate(latest.period_start)} – ${formatDate(latest.period_end)}`}</div>
-            </div>
-          )}
+  const latest = data.runs[0];
+  const previous = data.runs[1];
+  const overdueCompliance = data.compliance.filter((c) => c.status === "overdue" || c.status === "action_required");
+
+  // Readiness checks (real data only)
+  const totalEmp = data.employees.length;
+  const withTax = data.employees.filter((e) => e.tax_number).length;
+  const bankCount = data.bankAccounts.length;
+  const checks = [
+    { label: "Employees validated", value: `${totalEmp} / ${totalEmp}`, status: totalEmp > 0 ? "ok" : "warn" },
+    { label: "Banking details", value: bankCount >= totalEmp && totalEmp > 0 ? "Complete" : `${bankCount} / ${totalEmp}`, status: bankCount >= totalEmp && totalEmp > 0 ? "ok" : "warn" },
+    { label: "Tax information", value: `${withTax} / ${totalEmp}`, status: withTax >= totalEmp ? "ok" : "warn" },
+    { label: "Payroll Engine", value: engineConnected ? "Connected" : "Offline", status: engineConnected ? "ok" : "bad" },
+    { label: "Compliance", value: overdueCompliance.length ? "Action Required" : "Ready", status: overdueCompliance.length ? "warn" : "ok" }
+  ];
+  const okCount = checks.filter((c) => c.status === "ok").length;
+  const readinessPct = Math.round((okCount / checks.length) * 100);
+
+  const firstName = user?.full_name?.split(" ")[0] || "there";
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">{greeting()}, {firstName}.</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Here's your payroll position for {currentMonthLabel()}.</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-xs font-medium ${health.cls}`}>{health.label}</span>
-          {latest && <Link to={`/payroll/run/${latest.id}`} className="text-sm font-medium text-primary hover:underline">Open payroll →</Link>}
+          <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground">
+            {currentMonthLabel()}
+            <ChevronDown style={{ width: 15, height: 15 }} className="text-muted-foreground" />
+          </div>
+          {canRunPayroll && (
+            <Button onClick={() => navigate("/payroll")} disabled={!engineConnected} className="gap-2">
+              <Play style={{ width: 16, height: 16 }} /> Run Payroll
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Stat grid */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-        {stats.map((s) => (
-          <Card key={s.label} className="border-border">
-            <CardContent className="p-5">
-              <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-xl ${s.accent}`}>
-                <s.icon className="h-4.5 w-4.5" style={{ width: 18, height: 18 }} />
-              </div>
-              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{s.label}</div>
-              <div className="mt-1 font-heading text-xl font-semibold text-foreground">{s.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Hero */}
+      <CurrentPayrollHero run={latest} engineConnected={engineConnected} canRunPayroll={canRunPayroll} />
+
+      {/* KPI row */}
+      <KpiCards current={latest || {}} previous={previous} activeEmployees={data.employees.length} />
+
+      {/* Mid section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <PayrollCostTrend runs={data.runs} />
+        <PayrollReadiness checks={checks} pct={readinessPct} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Outstanding actions */}
-        <Card className="border-border lg:col-span-2">
-          <CardHeader className="pb-3"><CardTitle className="text-base">Outstanding Actions</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {overdueCompliance.length === 0 && !latest ? (
-              <EmptyState icon={ShieldCheck} title="All clear" description="No outstanding actions. Your payroll and compliance are up to date." />
-            ) : (
-              <>
-                {overdueCompliance.map((c) => (
-                  <div key={c.id} className="flex items-center justify-between rounded-xl border border-border p-3">
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                      <div>
-                        <div className="text-sm font-medium text-foreground">{c.type} — {c.action_required || "Action required"}</div>
-                        <div className="text-xs text-muted-foreground">Due {formatDate(c.due_date)}</div>
-                      </div>
-                    </div>
-                    <Link to="/compliance"><Button variant="outline" size="sm">Resolve</Button></Link>
-                  </div>
-                ))}
-                {latest && (latest.status === "draft" || latest.status === "review_required") && (
-                  <div className="flex items-center justify-between rounded-xl border border-border p-3">
-                    <div className="flex items-center gap-3">
-                      <CalendarClock className="h-4 w-4 text-blue-500" />
-                      <div>
-                        <div className="text-sm font-medium text-foreground">Payroll {payrollStatusMeta(latest.status).label.toLowerCase()}</div>
-                        <div className="text-xs text-muted-foreground">{latest.period_name}</div>
-                      </div>
-                    </div>
-                    <Link to={`/payroll/run/${latest.id}`}><Button variant="outline" size="sm">Continue <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button></Link>
-                  </div>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Recent activity */}
-        <Card className="border-border">
-          <CardHeader className="pb-3"><CardTitle className="text-base">Recent Activity</CardTitle></CardHeader>
-          <CardContent>
-            {data.audit.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No recent activity.</p>
-            ) : (
-              <ol className="space-y-4">
-                {data.audit.map((a) => (
-                  <li key={a.id} className="flex gap-3">
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary/60" />
-                    <div>
-                      <div className="text-sm text-foreground"><span className="font-medium">{a.action}</span> · {a.entity}</div>
-                      <div className="text-xs text-muted-foreground">{a.user_name} · {formatDateTime(a.date_time)}</div>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <ComplianceOverview compliance={data.compliance} />
+        <OutstandingActions overdueCompliance={overdueCompliance} latestRun={latest} />
       </div>
 
-      {/* Upcoming deadlines */}
-      <Card className="mt-6 border-border">
-        <CardHeader className="pb-3"><CardTitle className="text-base">Upcoming Compliance Deadlines</CardTitle></CardHeader>
-        <CardContent>
-          {data.compliance.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No compliance events yet. Connect the Payroll Engine to populate compliance data.</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {data.compliance.slice(0, 6).map((c) => {
-                const m = complianceStatusMeta(c.status);
-                return (
-                  <div key={c.id} className="flex items-center justify-between rounded-xl border border-border p-3">
-                    <div>
-                      <div className="text-sm font-medium text-foreground">{c.type}</div>
-                      <div className="text-xs text-muted-foreground">Due {formatDate(c.due_date)}</div>
-                    </div>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${m.cls}`}>{m.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Lower section */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <RecentActivity audit={data.audit} />
+        <SystemStatus health={data.health} checkedAt={data.checkedAt} />
+      </div>
     </div>
   );
 }
