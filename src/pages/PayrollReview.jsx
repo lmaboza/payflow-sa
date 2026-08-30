@@ -216,6 +216,10 @@ export default function PayrollReview() {
   const m = payrollStatusMeta(run.status);
   const locked = run.status === "completed" || run.status === "locked";
   const filtered = lines.filter((l) => (l.employee_name || "").toLowerCase().includes(search.toLowerCase()));
+  const visibleEmployees = employees.filter((e) => {
+    const q = search.trim().toLowerCase();
+    return !q || `${e.first_name} ${e.last_name} ${e.employee_number}`.toLowerCase().includes(q);
+  });
 
   return (
     <div>
@@ -276,7 +280,7 @@ export default function PayrollReview() {
       {/* Totals */}
       <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-6">
         {[
-          { l: "Employees", v: run.employee_count || lines.length },
+          { l: "Employees", v: run.employee_count || employees.length },
           { l: "Gross", v: formatZAR(run.gross_total) },
           { l: "PAYE", v: formatZAR(run.paye_total) },
           { l: "UIF", v: formatZAR(run.uif_total) },
@@ -298,9 +302,45 @@ export default function PayrollReview() {
 
       <Card className="border-border"><CardContent className="p-0">
         {lines.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">
-            No calculations yet. {canRun && run.status === "draft" ? "Validate employees then run the calculation." : "Calculations appear here after the engine processes payroll."}
-          </div>
+          employees.length === 0 ? (
+            <div className="p-10 text-center text-sm text-muted-foreground">
+              No active employees found. Add or import employees before running payroll.
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <div className="text-sm text-muted-foreground"><strong className="text-foreground">{visibleEmployees.length}</strong> active employee(s) will be included in this run.</div>
+                {canRun && run.status === "draft" && <span className="text-xs text-muted-foreground">Validate to begin.</span>}
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Employee No.</TableHead>
+                    <TableHead className="hidden md:table-cell">Type</TableHead>
+                    <TableHead className="text-right">Basic Salary</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleEmployees.map((e) => (
+                    <TableRow key={e.id} className="hover:bg-accent/40">
+                      <TableCell>
+                        <Link to={`/employees/${e.id}`} className="flex items-center gap-3">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-xs font-semibold text-foreground">{`${e.first_name?.[0] || ""}${e.last_name?.[0] || ""}`}</div>
+                          <span className="text-sm font-medium text-foreground">{e.first_name} {e.last_name}</span>
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{e.employee_number}</TableCell>
+                      <TableCell className="hidden text-sm capitalize md:table-cell">{e.employment_type}</TableCell>
+                      <TableCell className="text-right text-sm">{formatZAR(e.basic_salary)}</TableCell>
+                      <TableCell><Badge variant="outline" className="border-emerald-200 text-emerald-600">{e.status}</Badge></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          )
         ) : (
           <Table>
             <TableHeader>
