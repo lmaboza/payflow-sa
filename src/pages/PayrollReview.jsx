@@ -33,6 +33,7 @@ export default function PayrollReview() {
   const [busy, setBusy] = useState(null);
   const [engineError, setEngineError] = useState(null);
   const [search, setSearch] = useState("");
+  const [lastAction, setLastAction] = useState("validate");
 
   const role = user?.app_role || "business_owner";
   const canRun = can(role, "run_payroll");
@@ -92,7 +93,7 @@ export default function PayrollReview() {
   };
 
   const doValidate = async () => {
-    setBusy("validate"); setEngineError(null);
+    setBusy("validate"); setEngineError(null); setLastAction("validate");
     try {
       await base44.entities.PayrollRun.update(id, { status: "validating" });
       setRun({ ...run, status: "validating" });
@@ -117,7 +118,7 @@ export default function PayrollReview() {
   };
 
   const doCalculate = async () => {
-    setBusy("calculate"); setEngineError(null);
+    setBusy("calculate"); setEngineError(null); setLastAction("calculate");
     try {
       const data = await calculatePayroll(business.id, { payroll_run_id: id });
       if (data.status === "ok") {
@@ -133,7 +134,7 @@ export default function PayrollReview() {
   };
 
   const doApprove = async () => {
-    setBusy("approve"); setEngineError(null);
+    setBusy("approve"); setEngineError(null); setLastAction("approve");
     try {
       const data = await approvePayroll(business.id, { ...buildPayload(), totals: { gross: run.gross_total, paye: run.paye_total, uif: run.uif_total, sdl: run.sdl_total, net: run.net_total } });
       if (data.status === "ok") {
@@ -151,7 +152,7 @@ export default function PayrollReview() {
   };
 
   const doComplete = async () => {
-    setBusy("complete"); setEngineError(null);
+    setBusy("complete"); setEngineError(null); setLastAction("complete");
     try {
       // Generate payslips for each line item
       if (lines.length) {
@@ -174,6 +175,14 @@ export default function PayrollReview() {
     } catch (e) {
       toast({ variant: "destructive", title: "Could not complete payroll", description: e.message });
     } finally { setBusy(null); }
+  };
+
+  const retry = () => {
+    setEngineError(null);
+    if (lastAction === "calculate") doCalculate();
+    else if (lastAction === "approve") doApprove();
+    else if (lastAction === "complete") doComplete();
+    else doValidate();
   };
 
   if (loading) return <div className="flex h-64 items-center justify-center"><div className="w-7 h-7 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" /></div>;
@@ -238,7 +247,7 @@ export default function PayrollReview() {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>View System Status</Button>
-              <Button size="sm" onClick={() => { setEngineError(null); doCalculate(); }}>Retry</Button>
+              <Button size="sm" onClick={retry}>Retry</Button>
             </div>
           </div>
         </div>
