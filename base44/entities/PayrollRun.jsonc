@@ -50,6 +50,15 @@
       "default": "draft",
       "title": "Status"
     },
+    "engine_payroll_run_id": {
+      "type": "string",
+      "title": "Engine Payroll Run ID"
+    },
+    "engine_valid": {
+      "type": "boolean",
+      "default": false,
+      "title": "Engine Validated"
+    },
     "gross_total": {
       "type": "number",
       "default": 0,

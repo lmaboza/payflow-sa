@@ -90,6 +90,10 @@
     "engine_api_key": {
       "type": "string",
       "title": "Payroll Engine API Key"
+    },
+    "engine_business_id": {
+      "type": "string",
+      "title": "Engine Business ID"
     }
   },
   "required": [

@@ -94,7 +94,10 @@ function mapRow(row) {
     basic_salary: pick(row, "monthlyTaxableRemuneration", "monthly_taxable_remuneration", "basic_salary", "basicSalary", "salary"),
     pay_frequency: "monthly",
     tax_number: pick(row, "taxNumberMasked", "tax_number", "taxNumber"),
-    deductions: pick(row, "otherEmployeeDeductions", "deductions")
+    deductions: pick(row, "otherEmployeeDeductions", "deductions"),
+    age: pick(row, "age", "Age"),
+    monthly_uif_remuneration: pick(row, "monthlyUifRemuneration", "monthly_uif_remuneration"),
+    medical_scheme_members: pick(row, "medicalSchemeMembers", "medical_scheme_members")
   };
 }
 
@@ -153,6 +156,9 @@ export default function EmployeeImport() {
         pay_frequency: r.pay_frequency || "monthly",
         tax_number: r.tax_number || "",
         deductions: Number(r.deductions) || 0,
+        age: r.age ? Number(r.age) : null,
+        monthly_uif_remuneration: Number(r.monthly_uif_remuneration) || Number(r.basic_salary) || 0,
+        medical_scheme_members: Number(r.medical_scheme_members) || 0,
         status: "active"
       }));
       await base44.entities.Employee.bulkCreate(records);

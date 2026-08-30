@@ -31,6 +31,10 @@
       "format": "date",
       "title": "Date of Birth"
     },
+    "age": {
+      "type": "integer",
+      "title": "Age"
+    },
     "email": {
       "type": "string",
       "format": "email",
@@ -84,6 +88,16 @@
     "basic_salary": {
       "type": "number",
       "title": "Basic Salary"
+    },
+    "monthly_uif_remuneration": {
+      "type": "number",
+      "default": 0,
+      "title": "Monthly UIF Remuneration"
+    },
+    "medical_scheme_members": {
+      "type": "integer",
+      "default": 0,
+      "title": "Medical Scheme Members"
     },
     "pay_frequency": {
       "type": "string",
@@ -152,6 +166,10 @@
       "type": "number",
       "default": 0,
       "title": "Retirement Contribution"
+    },
+    "engine_employee_id": {
+      "type": "string",
+      "title": "Engine Employee ID"
     },
     "status": {
       "type": "string",

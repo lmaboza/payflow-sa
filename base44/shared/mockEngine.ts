@@ -110,8 +110,10 @@ export function mockValidate(data) {
   const validCount = results.filter((r) => r.valid).length;
   return {
     status: 'ok',
+    valid: validCount === results.length,
     valid_count: validCount,
     error_count: results.length - validCount,
+    summary: `${validCount} of ${results.length} employees valid`,
     results
   };
 }

@@ -85,7 +85,7 @@ export default function PayrollReview() {
         reason: data.reason
       });
     } else if (data?.status === "engine_error") {
-      setEngineError({ title: "Engine returned an error", message: JSON.stringify(data) });
+      setEngineError({ title: "Payroll Engine Error", message: data.userMessage || data.message || "The payroll engine returned an error.", details: data.details || (data.code ? `HTTP ${data.code}` : null) });
     } else {
       setEngineError({ title: fallback || "Operation failed", message: data?.message || "Unexpected response from the payroll engine." });
     }
@@ -96,18 +96,22 @@ export default function PayrollReview() {
     try {
       await base44.entities.PayrollRun.update(id, { status: "validating" });
       setRun({ ...run, status: "validating" });
-      const data = await validatePayroll(business.id, buildPayload());
+      const data = await validatePayroll(business.id, { payroll_run_id: id });
       if (data.status === "ok") {
-        const newStatus = data.valid ? "calculated" : "validation_failed";
+        const newStatus = data.valid ? "validating" : "validation_failed";
         await base44.entities.PayrollRun.update(id, { status: newStatus });
         await logAudit(business.id, user, "payroll_validated", "PayrollRun", id, null, { valid: data.valid });
-        setRun((r) => ({ ...r, status: newStatus }));
+        setRun((r) => ({ ...r, status: newStatus, engine_valid: !!data.valid, engine_payroll_run_id: data.engine_payroll_run_id || r.engine_payroll_run_id }));
         toast({ title: data.valid ? "Validation passed" : "Validation issues found", variant: data.valid ? "default" : "destructive", description: data.summary || "" });
         load();
       } else {
+        await base44.entities.PayrollRun.update(id, { status: "validation_failed" }).catch(() => {});
+        setRun((r) => ({ ...r, status: "validation_failed" }));
         handleEngineError(data, "Validation failed");
       }
     } catch (e) {
+      await base44.entities.PayrollRun.update(id, { status: "validation_failed" }).catch(() => {});
+      setRun((r) => ({ ...r, status: "validation_failed" }));
       handleEngineError({ status: "offline", reason: "unreachable", message: e.message });
     } finally { setBusy(null); }
   };
@@ -115,48 +119,10 @@ export default function PayrollReview() {
   const doCalculate = async () => {
     setBusy("calculate"); setEngineError(null);
     try {
-      const data = await calculatePayroll(business.id, buildPayload());
-      if (data.status === "ok" && (data.line_items || data.results)) {
-        const items = data.line_items || data.results || [];
-        // Persist line items
-        await base44.entities.PayrollLineItem.deleteMany({ payroll_run_id: id });
-        if (items.length) {
-          await base44.entities.PayrollLineItem.bulkCreate(
-            items.map((it) => ({
-              business_id: business.id,
-              payroll_run_id: id,
-              employee_id: it.employee_id || it.employeeId,
-              employee_name: it.employee_name || it.name,
-              basic_salary: Number(it.basic_salary) || 0,
-              allowances: Number(it.allowances) || 0,
-              overtime: Number(it.overtime) || 0,
-              bonus: Number(it.bonus) || 0,
-              gross_pay: Number(it.gross_pay || it.gross) || 0,
-              paye: Number(it.paye) || 0,
-              uif: Number(it.uif) || 0,
-              sdl: Number(it.sdl) || 0,
-              other_deductions: Number(it.other_deductions || it.deductions) || 0,
-              net_pay: Number(it.net_pay || it.net) || 0,
-              exceptions: it.exceptions || [],
-              status: (it.exceptions && it.exceptions.length) ? "review" : "ok"
-            }))
-          );
-        }
-        const totals = data.totals || {};
-        const status = items.some((it) => it.exceptions && it.exceptions.length) ? "review_required" : "calculated";
-        await base44.entities.PayrollRun.update(id, {
-          status,
-          gross_total: Number(totals.gross || 0),
-          paye_total: Number(totals.paye || 0),
-          uif_total: Number(totals.uif || 0),
-          sdl_total: Number(totals.sdl || 0),
-          net_total: Number(totals.net || 0),
-          employee_count: items.length,
-          exceptions_count: items.filter((it) => it.exceptions && it.exceptions.length).length
-        });
-        await logAudit(business.id, user, "payroll_calculated", "PayrollRun", id, null, { employees: items.length });
-        setRun((r) => ({ ...r, status, ...totals }));
-        toast({ title: "Payroll calculated", description: `${items.length} employees processed.` });
+      const data = await calculatePayroll(business.id, { payroll_run_id: id });
+      if (data.status === "ok") {
+        await logAudit(business.id, user, "payroll_calculated", "PayrollRun", id, null, { employees: data.employee_count ?? 0 });
+        toast({ title: "Payroll calculated", description: `${data.employee_count ?? 0} employees processed.` });
         load();
       } else {
         handleEngineError(data, "Calculation failed");
@@ -252,8 +218,8 @@ export default function PayrollReview() {
       {/* Action bar */}
       {!locked && (
         <div className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-4">
-          {canRun && run.status === "draft" && <Button onClick={doValidate} disabled={!!busy} className="gap-2">{busy === "validate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Validate Employees</Button>}
-          {canRun && (run.status === "draft" || run.status === "validating" || run.status === "validation_failed") && <Button onClick={doCalculate} disabled={!!busy} className="gap-2">{busy === "calculate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />} Calculate Payroll</Button>}
+          {canRun && (run.status === "draft" || run.status === "validation_failed") && <Button onClick={doValidate} disabled={!!busy} className="gap-2">{busy === "validate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />} Validate Employees</Button>}
+          {canRun && run.engine_valid && run.engine_payroll_run_id && <Button onClick={doCalculate} disabled={!!busy} className="gap-2">{busy === "calculate" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />} Calculate Payroll</Button>}
           {canApprove && (run.status === "calculated" || run.status === "review_required") && <Button onClick={doApprove} disabled={!!busy} className="gap-2">{busy === "approve" ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />} Approve Payroll</Button>}
           {canComplete && run.status === "approved" && <Button onClick={doComplete} disabled={!!busy} className="gap-2">{busy === "complete" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />} Complete Payroll</Button>}
         </div>
@@ -268,6 +234,7 @@ export default function PayrollReview() {
               <h3 className="font-heading text-sm font-semibold text-rose-900">{engineError.title}</h3>
               <p className="mt-1 text-sm text-rose-700">{engineError.message}</p>
               {engineError.reason === "not_configured" && <p className="mt-1 text-xs text-rose-600">Configure the engine URL in <Link to="/settings" className="underline">Settings → Payroll Engine</Link>.</p>}
+              {engineError.details && <p className="mt-1 break-all text-xs text-rose-500/80">{typeof engineError.details === "string" ? engineError.details : JSON.stringify(engineError.details)}</p>}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate("/settings")}>View System Status</Button>

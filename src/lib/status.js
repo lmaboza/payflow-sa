@@ -1,7 +1,7 @@
 export function payrollStatusMeta(status) {
   const map = {
     draft: { label: "Draft", cls: "bg-slate-100 text-slate-600" },
-    validating: { label: "Validating", cls: "bg-blue-50 text-blue-600" },
+    validating: { label: "Validated", cls: "bg-blue-50 text-blue-600" },
     validation_failed: { label: "Validation Failed", cls: "bg-rose-50 text-rose-600" },
     calculated: { label: "Calculated", cls: "bg-indigo-50 text-indigo-600" },
     review_required: { label: "Review Required", cls: "bg-amber-50 text-amber-600" },
