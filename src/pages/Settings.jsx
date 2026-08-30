@@ -55,9 +55,14 @@ export default function Settings() {
       await refreshBusiness();
       const data = await engineHealth(business.id);
       setHealth(data);
-      if (data.status === "connected") toast({ title: "Engine connected" });
-      else toast({ variant: "destructive", title: "Engine unavailable", description: data.message });
+      if (data.status === "connected" || data.status === "healthy") {
+        toast({ title: "Engine connected" });
+      } else {
+        console.error("Payroll Engine test connection returned non-connected:", data);
+        toast({ variant: "destructive", title: "Engine unavailable", description: data.message || data.reason });
+      }
     } catch (e) {
+      console.error("Payroll Engine test connection failed:", e);
       setHealth({ status: "offline", message: e.message });
     } finally {
       setChecking(false);
@@ -68,7 +73,7 @@ export default function Settings() {
     return <div className="flex h-64 items-center justify-center"><div className="w-7 h-7 border-4 border-slate-200 border-t-slate-900 rounded-full animate-spin" /></div>;
   }
 
-  const connected = health?.status === "connected";
+  const connected = health?.status === "connected" || health?.status === "healthy";
 
   const field = (label, name, opts = {}) => (
     <div className="space-y-1.5">
@@ -133,7 +138,7 @@ export default function Settings() {
               <CardDescription>The base URL of your PayFlow Payroll Engine — a local address or private server URL.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {field("Payroll Engine URL", "engine_url", { placeholder: "http://localhost:8743" })}
+              {field("Payroll Engine URL", "engine_url", { placeholder: "https://your-payroll-engine-url" })}
               {field("Engine API Key (optional)", "engine_api_key")}
               <div className="flex justify-end gap-2">
                 {canManageEngine && <Button onClick={testConnection} disabled={checking} variant="outline" className="gap-2"><RefreshCw className="h-4 w-4" /> Save & Test</Button>}

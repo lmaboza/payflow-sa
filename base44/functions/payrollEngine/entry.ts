@@ -56,11 +56,15 @@ export default async function(req) {
           signal: AbortSignal.timeout(8000)
         });
         if (!res.ok) {
-          return Response.json({ status: 'offline', reason: 'http_error', code: res.status });
+          return Response.json({ status: 'offline', reason: 'http_error', code: res.status, message: `Engine returned HTTP ${res.status}` });
         }
         const json = await res.json();
-        return Response.json({ status: 'connected', ...json });
+        // The real .NET engine reports status: "healthy"; the mock reports "connected".
+        // Normalize any healthy response to "connected" so the app treats a live engine as online.
+        const ok = ['healthy', 'connected', 'ok'].includes(json.status);
+        return Response.json({ ...json, status: ok ? 'connected' : (json.status || 'offline') });
       } catch (e) {
+        console.error('Payroll Engine health check failed:', e);
         return Response.json({ status: 'offline', reason: 'unreachable', message: e.message });
       }
     }
