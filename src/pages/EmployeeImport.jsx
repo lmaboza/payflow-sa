@@ -29,6 +29,75 @@ function validateRow(row, existingNumbers) {
   return errors;
 }
 
+function splitCSV(text) {
+  const rows = [];
+  let row = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cur += '"'; i++; }
+        else inQuotes = false;
+      } else cur += ch;
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ",") {
+      row.push(cur); cur = "";
+    } else if (ch === "\n") {
+      row.push(cur); rows.push(row); row = []; cur = "";
+    } else if (ch !== "\r") {
+      cur += ch;
+    }
+  }
+  if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter((r) => r.some((c) => c.trim() !== ""));
+}
+
+function parseCSV(text) {
+  const rows = splitCSV(text);
+  if (!rows.length) return [];
+  const headers = rows[0].map((h) => h.trim());
+  return rows.slice(1).map((values) => {
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (values[idx] ?? "").trim(); });
+    return obj;
+  });
+}
+
+function pick(row, ...keys) {
+  for (const k of keys) {
+    const v = row[k];
+    if (v !== undefined && v !== null && String(v).trim() !== "") return String(v).trim();
+  }
+  return "";
+}
+
+const VALID_EMPLOYMENT_TYPES = ["permanent", "fixed_term", "casual", "contractor"];
+function normalizeEmploymentType(v) {
+  const lower = (v || "").toLowerCase().replace(/[\s-]+/g, "_");
+  return VALID_EMPLOYMENT_TYPES.includes(lower) ? lower : "permanent";
+}
+
+// Maps a raw CSV row (camelCase or snake_case headers) to Employee entity fields.
+function mapRow(row) {
+  return {
+    employee_number: pick(row, "employeeNumber", "employee_number"),
+    first_name: pick(row, "firstName", "first_name"),
+    last_name: pick(row, "lastName", "last_name"),
+    email: pick(row, "email", "Email"),
+    mobile: pick(row, "mobile", "phone", "Phone"),
+    id_number: pick(row, "idNumber", "id_number", "idNumberMasked"),
+    employment_date: pick(row, "effectiveFrom", "employment_date", "startDate", "hireDate"),
+    employment_type: normalizeEmploymentType(pick(row, "employmentType", "employment_type", "employmentStatus")),
+    basic_salary: pick(row, "monthlyTaxableRemuneration", "monthly_taxable_remuneration", "basic_salary", "basicSalary", "salary"),
+    pay_frequency: "monthly",
+    tax_number: pick(row, "taxNumberMasked", "tax_number", "taxNumber"),
+    deductions: pick(row, "otherEmployeeDeductions", "deductions")
+  };
+}
+
 export default function EmployeeImport() {
   const navigate = useNavigate();
   const { user, business } = useBusiness();
@@ -44,29 +113,17 @@ export default function EmployeeImport() {
     if (!file) return;
     setParsing(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      const schema = {
-        type: "object",
-        properties: {
-          employees: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                employee_number: { type: "string" }, first_name: { type: "string" }, last_name: { type: "string" },
-                id_number: { type: "string" }, email: { type: "string" }, mobile: { type: "string" },
-                employment_date: { type: "string" }, employment_type: { type: "string" },
-                basic_salary: { type: "string" }, pay_frequency: { type: "string" }, tax_number: { type: "string" }
-              }
-            }
-          }
-        }
-      };
-      const result = await base44.integrations.Core.ExtractDataFromUploadedFile({ file_url, json_schema: schema });
-      const extracted = (result.output && result.output.employees) ? result.output.employees : (Array.isArray(result.output) ? result.output : []);
+      const text = await file.text();
+      const parsed = parseCSV(text);
+      if (!parsed.length) {
+        toast({ variant: "destructive", title: "No rows found", description: "The file appears to be empty." });
+        return;
+      }
       const existing = await base44.entities.Employee.filter({ business_id: business.id }, "-created_date", 500);
-      setExistingNumbers(new Set(existing.map((e) => e.employee_number)));
-      const validated = extracted.map((r) => ({ ...r, _errors: validateRow(r, new Set(existing.map((e) => e.employee_number))) }));
+      const existingNumbers = new Set(existing.map((e) => e.employee_number));
+      setExistingNumbers(existingNumbers);
+      const mapped = parsed.map(mapRow);
+      const validated = mapped.map((r) => ({ ...r, _errors: validateRow(r, existingNumbers) }));
       setRows(validated);
       setStep("preview");
     } catch (e) {
@@ -95,6 +152,7 @@ export default function EmployeeImport() {
         basic_salary: Number(r.basic_salary) || 0,
         pay_frequency: r.pay_frequency || "monthly",
         tax_number: r.tax_number || "",
+        deductions: Number(r.deductions) || 0,
         status: "active"
       }));
       await base44.entities.Employee.bulkCreate(records);
@@ -118,7 +176,7 @@ export default function EmployeeImport() {
           <div className="mx-auto max-w-md text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent"><FileSpreadsheet className="h-7 w-7 text-muted-foreground" /></div>
             <h3 className="font-heading text-base font-semibold">Upload your employee file</h3>
-            <p className="mt-1 text-sm text-muted-foreground">CSV or Excel. Include columns: employee_number, first_name, last_name, email, basic_salary, employment_date.</p>
+            <p className="mt-1 text-sm text-muted-foreground">CSV or Excel. Accepted columns: employeeNumber/employee_number, firstName/first_name, lastName/last_name, email, monthlyTaxableRemuneration/basic_salary, effectiveFrom/employment_date, taxNumberMasked/tax_number.</p>
             <Input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setFile(e.target.files?.[0] || null)} className="mt-6" />
             <Button onClick={parse} disabled={!file || parsing} className="mt-4 w-full gap-2">
               {parsing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />} {parsing ? "Reading file…" : "Upload & Validate"}
