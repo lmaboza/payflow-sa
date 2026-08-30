@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { engineHealth } from "@/lib/payrollEngine";
+
+const POLL_INTERVAL = 15000; // re-check the live engine every 15s
 
 // Compact Payroll Engine connection indicator for the top bar.
 export default function EngineStatusBadge({ businessId }) {
   const [state, setState] = useState({ status: "checking" });
+  const location = useLocation();
 
   useEffect(() => {
     let active = true;
@@ -12,13 +15,17 @@ export default function EngineStatusBadge({ businessId }) {
       setState({ status: "offline", reason: "not_configured" });
       return;
     }
-    engineHealth(businessId)
-      .then((data) => { if (active) setState(data); })
-      .catch(() => { if (active) setState({ status: "offline", reason: "unreachable" }); });
-    return () => { active = false; };
-  }, [businessId]);
+    const check = () => {
+      engineHealth(businessId)
+        .then((data) => { if (active) setState(data); })
+        .catch(() => { if (active) setState({ status: "offline", reason: "unreachable" }); });
+    };
+    check();
+    const timer = setInterval(check, POLL_INTERVAL);
+    return () => { active = false; clearInterval(timer); };
+  }, [businessId, location.pathname]);
 
-  const connected = state.status === "connected";
+  const connected = state.status === "connected" || state.status === "healthy";
   const dot = connected ? "bg-emerald-500" : state.status === "checking" ? "bg-amber-400" : "bg-rose-500";
   const label = connected ? "Engine Connected" : state.status === "checking" ? "Checking…" : "Engine Offline";
   const chip = connected
