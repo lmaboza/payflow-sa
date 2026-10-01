@@ -1,18 +1,20 @@
-import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useEmployee } from "@/lib/useEmployee";
 import EmployeeHeader from "@/components/portal/EmployeeHeader";
 import PaySnapshot from "@/components/portal/PaySnapshot";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import DashboardSkeleton from "@/components/portal/dashboard/DashboardSkeleton";
+import QuickActions from "@/components/portal/dashboard/QuickActions";
+import YtdSummaryCard from "@/components/portal/dashboard/YtdSummaryCard";
+import LeaveBalanceCard from "@/components/portal/dashboard/LeaveBalanceCard";
+import ClaimsSummaryCard from "@/components/portal/dashboard/ClaimsSummaryCard";
+import RecentPayslips from "@/components/portal/dashboard/RecentPayslips";
+import RecentActivity from "@/components/portal/dashboard/RecentActivity";
+import UpcomingItems from "@/components/portal/dashboard/UpcomingItems";
 import { useToast } from "@/components/ui/use-toast";
 import { generatePayslip } from "@/lib/payrollEngine";
-import { formatZAR, formatDate } from "@/lib/format";
+import { formatZAR } from "@/lib/format";
 import { base44 } from "@/api/base44Client";
-import {
-  ReceiptText, CalendarDays, FileText, Wallet, User, MessageSquare,
-  TrendingUp, ShieldCheck, Loader2
-} from "lucide-react";
 
 function greeting() {
   const h = new Date().getHours();
@@ -21,44 +23,67 @@ function greeting() {
   return "Good evening";
 }
 
-const QUICK_ACTIONS = [
-  { label: "View Payslip", to: "/portal/payslips", icon: ReceiptText, desc: "Payslip archive" },
-  { label: "Request Leave", to: "/portal/leave", icon: CalendarDays, desc: "Apply for leave" },
-  { label: "Tax Documents", to: "/portal/tax-documents", icon: FileText, desc: "Certificates" },
-  { label: "Submit Claim", to: "/portal/claims", icon: Wallet, desc: "Reimbursements" },
-  { label: "Update Details", to: "/portal/profile", icon: User, desc: "My information" },
-  { label: "Payroll Query", to: "/portal/queries", icon: MessageSquare, desc: "Ask Payroll" }
-];
+function nextPayDate(business, latestPayDate) {
+  const day = business?.default_pay_date;
+  if (!day || day < 1 || day > 31) return null;
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  // try this month's pay day; if passed, next month
+  const candidate = new Date(y, m, day);
+  if (candidate < now) {
+    return new Date(y, m + 1, day);
+  }
+  return candidate;
+}
 
 export default function EmployeeDashboard() {
   const { employee, business } = useEmployee();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [latestPayslip, setLatestPayslip] = useState(null);
+  const [payslips, setPayslips] = useState([]);
   const [payslipCount, setPayslipCount] = useState(0);
   const [ytdGross, setYtdGross] = useState(0);
-  const [ytdTax, setYtdTax] = useState(0);
+  const [ytdPaye, setYtdPaye] = useState(0);
+  const [ytdUif, setYtdUif] = useState(0);
   const [leaveBalance, setLeaveBalance] = useState(null);
-  const [pendingClaims, setPendingClaims] = useState(0);
+  const [pendingLeave, setPendingLeave] = useState(0);
+  const [claimsSummary, setClaimsSummary] = useState({ pending: 0, approved: 0, rejected: 0 });
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifs, setUnreadNotifs] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!employee?.id) return;
     (async () => {
       try {
-        const pays = await base44.entities.Payslip.filter({ employee_id: employee.id }, "-pay_date", 50);
+        const [pays, lb, claims, notifs, pendingLv, unread] = await Promise.all([
+          base44.entities.Payslip.filter({ employee_id: employee.id }, "-pay_date", 6),
+          base44.entities.LeaveBalance.filter({ employee_id: employee.id }, "-created_date", 1),
+          base44.entities.Claim.filter({ employee_id: employee.id }, "-created_date", 50),
+          base44.entities.EmployeeNotification.filter({ employee_id: employee.id }, "-created_date", 6),
+          base44.entities.LeaveRequest.count({ employee_id: employee.id, status: "pending" }),
+          base44.entities.EmployeeNotification.count({ employee_id: employee.id, read: false })
+        ]);
         setLatestPayslip(pays?.[0] || null);
+        setPayslips(pays || []);
         setPayslipCount(pays?.length || 0);
-        const gross = (pays || []).reduce((s, p) => s + (Number(p.ytd_gross) || Number(p.gross_salary) || 0), 0);
-        const tax = (pays || []).reduce((s, p) => s + (Number(p.ytd_paye) || Number(p.paye) || 0), 0);
-        setYtdGross(gross);
-        setYtdTax(tax);
-
-        const lb = await base44.entities.LeaveBalance.filter({ employee_id: employee.id }, "-created_date", 1);
+        setYtdGross((pays || []).reduce((s, p) => s + (Number(p.ytd_gross) || Number(p.gross_salary) || 0), 0));
+        setYtdPaye((pays || []).reduce((s, p) => s + (Number(p.ytd_paye) || Number(p.paye) || 0), 0));
+        setYtdUif((pays || []).reduce((s, p) => s + (Number(p.ytd_uif) || Number(p.uif) || 0), 0));
         setLeaveBalance(lb?.[0] || null);
-
-        const claims = await base44.entities.Claim.filter({ employee_id: employee.id, status: { $in: ["submitted", "under_review"] } }, "-created_date", 50);
-        setPendingClaims(claims?.length || 0);
+        setPendingLeave(pendingLv || 0);
+        setNotifications(notifs || []);
+        setUnreadNotifs(unread || 0);
+        const c = claims || [];
+        setClaimsSummary({
+          pending: c.filter((x) => ["submitted", "under_review"].includes(x.status)).length,
+          approved: c.filter((x) => x.status === "approved").length,
+          rejected: c.filter((x) => x.status === "rejected").length
+        });
       } catch (e) {
         /* noop */
       } finally {
@@ -67,11 +92,12 @@ export default function EmployeeDashboard() {
     })();
   }, [employee?.id]);
 
-  const handleDownload = async () => {
-    if (!latestPayslip) return;
-    setDownloading(true);
+  const handleDownload = async (p) => {
+    const target = p || latestPayslip;
+    if (!target) return;
+    if (p) setDownloadingId(p.id); else setDownloading(true);
     try {
-      const data = await generatePayslip(business?.id, { payslip_id: latestPayslip.id, employee_id: employee.id, payroll_run_id: latestPayslip.payroll_run_id });
+      const data = await generatePayslip(business?.id, { payslip_id: target.id, employee_id: employee.id, payroll_run_id: target.payroll_run_id });
       if (data.status === "ok" && (data.pdf_url || data.url)) {
         window.open(data.pdf_url || data.url, "_blank");
         toast({ title: "Payslip PDF generated" });
@@ -81,15 +107,11 @@ export default function EmployeeDashboard() {
     } catch (e) {
       toast({ variant: "destructive", title: "Payslip PDF unavailable", description: e.message });
     } finally {
-      setDownloading(false);
+      if (p) setDownloadingId(null); else setDownloading(false);
     }
   };
 
-  if (loading) {
-    return <div className="flex h-64 items-center justify-center"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>;
-  }
-
-  const annualLeft = leaveBalance ? Math.max(0, (leaveBalance.annual_total || 0) - (leaveBalance.annual_used || 0)) : null;
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div>
@@ -100,92 +122,49 @@ export default function EmployeeDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <PaySnapshot payslip={latestPayslip} onDownload={handleDownload} downloading={downloading} />
+          <PaySnapshot payslip={latestPayslip} onDownload={() => handleDownload()} downloading={downloading} />
         </div>
 
         <div className="space-y-4">
-          <Card className="border-border">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <TrendingUp className="h-4 w-4" /> Year to date
-              </div>
-              <div className="mt-3 space-y-3">
-                <div>
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">YTD Gross</div>
-                  <div className="font-heading text-xl font-semibold text-foreground">{formatZAR(ytdGross)}</div>
-                </div>
-                <div>
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">YTD Tax (PAYE)</div>
-                  <div className="font-heading text-xl font-semibold text-foreground">{formatZAR(ytdTax)}</div>
-                </div>
-                <div>
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Payslips this year</div>
-                  <div className="font-heading text-xl font-semibold text-foreground">{payslipCount}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <CalendarDays className="h-4 w-4" /> Leave balance
-              </div>
-              <div className="mt-3 flex items-end justify-between">
-                <div>
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Annual leave left</div>
-                  <div className="font-heading text-2xl font-semibold text-foreground">
-                    {annualLeft !== null ? `${annualLeft} days` : "—"}
-                  </div>
-                </div>
-                <Link to="/portal/leave">
-                  <Button variant="outline" size="sm">Request</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Wallet className="h-4 w-4" /> Claims
-              </div>
-              <div className="mt-3 flex items-end justify-between">
-                <div>
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Pending claims</div>
-                  <div className="font-heading text-2xl font-semibold text-foreground">{pendingClaims}</div>
-                </div>
-                <Link to="/portal/claims">
-                  <Button variant="outline" size="sm">New</Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <YtdSummaryCard
+            ytdGross={ytdGross}
+            ytdPaye={ytdPaye}
+            ytdUif={ytdUif}
+            payslipCount={payslipCount}
+            onViewDetails={() => navigate("/portal/payslips")}
+          />
+          <LeaveBalanceCard balance={leaveBalance} onRequest={() => navigate("/portal/leave")} />
+          <ClaimsSummaryCard
+            pending={claimsSummary.pending}
+            approved={claimsSummary.approved}
+            rejected={claimsSummary.rejected}
+            onNew={() => navigate("/portal/claims")}
+            onView={() => navigate("/portal/claims")}
+          />
         </div>
       </div>
 
       <div className="mt-8">
-        <div className="mb-4 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-          <h2 className="font-heading text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quick Actions</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {QUICK_ACTIONS.map((a) => (
-            <Link key={a.label} to={a.to}>
-              <Card className="group h-full border-border transition-shadow hover:shadow-card-hover">
-                <CardContent className="flex h-full flex-col items-start gap-3 p-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-600 group-hover:text-white">
-                    <a.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-foreground">{a.label}</div>
-                    <div className="text-[11px] text-muted-foreground">{a.desc}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <QuickActions />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <RecentPayslips
+          payslips={payslips}
+          onView={(p) => navigate(`/portal/payslips/${p.id}`)}
+          onDownload={handleDownload}
+          downloadingId={downloadingId}
+        />
+        <RecentActivity notifications={notifications} />
+      </div>
+
+      <div className="mt-6">
+        <UpcomingItems
+          nextPayDate={nextPayDate(business, latestPayslip?.pay_date)}
+          pendingLeave={pendingLeave}
+          pendingClaims={claimsSummary.pending}
+          unreadNotifs={unreadNotifs}
+        />
       </div>
     </div>
   );

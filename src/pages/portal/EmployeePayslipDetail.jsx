@@ -157,8 +157,8 @@ export default function EmployeePayslipDetail() {
       />
 
       {/* Net pay hero */}
-      <Card className="mb-6 overflow-hidden border-border">
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 px-6 py-6 text-white">
+      <Card className="mb-6 overflow-hidden border-border shadow-hero">
+        <div className="hero-navy px-6 py-6 text-white sm:px-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <div className="text-[11px] uppercase tracking-wide text-slate-400">Net Pay</div>

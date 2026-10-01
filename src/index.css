@@ -5,53 +5,59 @@
 
 @layer base {
   :root {
-    --background: 220 14% 97%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
+    /* PayFlow SA — premium fintech palette */
+    --background: 160 22% 96%;          /* #F4F8F7 mint-grey canvas */
+    --foreground: 222 47% 11%;          /* #0F172A primary text */
+    --card: 0 0% 100%;                   /* #FFFFFF primary card */
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 160 84% 39%;
+    --primary: 160 84% 39%;              /* #10B981 emerald */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 14% 96%;
+    --primary-dark: 158 94% 30%;         /* #059669 emerald dark */
+    --primary-soft: 152 47% 94%;         /* #E8F8F2 emerald soft */
+    --secondary: 180 9% 98%;             /* #F8FAFA secondary surface */
     --secondary-foreground: 222 47% 11%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 220 14% 96%;
+    --muted: 145 39% 95%;                /* #EDF8F4 soft green surface */
+    --muted-foreground: 215 16% 47%;     /* #64748B secondary text */
+    --accent: 160 22% 96%;
     --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;            /* #DC2626 error */
     --destructive-foreground: 0 0% 100%;
-    --success: 160 84% 39%;
+    --success: 158 94% 30%;              /* #059669 */
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 32 92% 44%;               /* #D97706 */
     --warning-foreground: 0 0% 100%;
-    --info: 217 91% 60%;
+    --info: 221 83% 53%;                 /* #2563EB information */
     --info-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 135 15% 89%;               /* #DDE7E4 */
+    --input: 135 15% 89%;
     --ring: 160 84% 39%;
     --chart-1: 160 84% 39%;
-    --chart-2: 217 91% 60%;
-    --chart-3: 38 92% 50%;
+    --chart-2: 221 83% 53%;
+    --chart-3: 32 92% 44%;
     --chart-4: 280 65% 60%;
-    --chart-5: 0 84% 60%;
-    --radius: 0.75rem;
+    --chart-5: 0 72% 51%;
+    --radius: 0.875rem;
     --font-heading: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-body: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 220 20% 65%;
+    /* Dark navy sidebar */
+    --sidebar-background: 226 47% 12%;   /* #10192C */
+    --sidebar-foreground: 215 35% 65%;
     --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent: 217 43% 16%;       /* #17243A hover */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 217 33% 20%;
+    --sidebar-active: 189 53% 15%;       /* #12343B active */
+    --sidebar-border: 217 43% 20%;
     --sidebar-ring: 160 84% 39%;
+    --text-muted: 215 20% 65%;           /* #94A3B8 muted text */
   }
 
   .dark {
-    --background: 222 47% 11%;
+    --background: 226 47% 11%;
     --foreground: 0 0% 98%;
     --card: 222 47% 13%;
     --card-foreground: 0 0% 98%;
@@ -65,23 +71,24 @@
     --muted-foreground: 220 14% 65%;
     --accent: 217 33% 20%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --success: 160 84% 39%;
+    --success: 158 94% 30%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 32 92% 44%;
     --warning-foreground: 0 0% 100%;
-    --info: 217 91% 60%;
+    --info: 221 83% 53%;
     --info-foreground: 0 0% 100%;
     --border: 217 33% 20%;
     --input: 217 33% 20%;
     --ring: 160 84% 39%;
-    --sidebar-background: 222 47% 9%;
+    --sidebar-background: 226 47% 9%;
     --sidebar-foreground: 220 20% 65%;
     --sidebar-primary: 160 84% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 217 33% 15%;
     --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-active: 189 53% 13%;
     --sidebar-border: 217 33% 18%;
     --sidebar-ring: 160 84% 39%;
   }
@@ -100,5 +107,34 @@
   .tabular {
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum";
+  }
+}
+
+@layer utilities {
+  /* Premium mint-grey workspace canvas for the Employee portal — extremely subtle */
+  .portal-workspace {
+    background:
+      radial-gradient(circle at 82% 3%, rgba(16, 185, 129, 0.055), transparent 32%),
+      linear-gradient(135deg, #F7FAF9 0%, #F2F7F6 55%, #F5F8FA 100%);
+    background-attachment: fixed;
+  }
+
+  /* Dark navy hero gradient for Latest Pay / Net Pay cards */
+  .hero-navy {
+    background:
+      radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.16), transparent 42%),
+      linear-gradient(135deg, #10192C 0%, #162747 100%);
+  }
+
+  .text-muted-token {
+    color: hsl(var(--text-muted));
+  }
+
+  /* Subtle 2px lift on interactive cards */
+  .card-lift {
+    @apply transition-all duration-200;
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
   }
 }
