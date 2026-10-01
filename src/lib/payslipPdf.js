@@ -33,8 +33,38 @@ function periodLabel(payslip) {
   return `${formatDate(payslip.pay_period_start)} – ${formatDate(payslip.pay_period_end)}`;
 }
 
+// ---- Brand logo (embedded for crisp, readable PDF rendering) ----
+// PNG with gradients; placed on a WHITE header band so the navy text stays legible.
+// CORS is permissive on media.base44.com public assets, so fetch()->data URL works.
+const LOGO_URL = "https://media.base44.com/images/public/6a79f98d1819f6eb65f3659e/58ddea315_PayFlowSAPayrollLogo.png";
+let _logoCache = null;
+async function loadLogo() {
+  if (_logoCache) return _logoCache;
+  try {
+    const res = await fetch(LOGO_URL);
+    if (!res.ok) throw new Error("logo fetch failed");
+    const blob = await res.blob();
+    const dataUrl = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    const dims = await new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+      img.onerror = () => resolve({ w: 4, h: 1 });
+      img.src = dataUrl;
+    });
+    _logoCache = { dataUrl, w: dims.w, h: dims.h };
+  } catch (e) {
+    _logoCache = { dataUrl: null, w: 4, h: 1 };
+  }
+  return _logoCache;
+}
+
 // ---- PDF construction (A4, mm) ----
-export function buildPayslipPdf(payslip, employee, business, lineItem) {
+export async function buildPayslipPdf(payslip, employee, business, lineItem) {
   const doc = new jsPDF({ unit: "mm", format: "a4", compress: true });
   const W = 210;
   const M = 14; // margin
@@ -51,32 +81,44 @@ export function buildPayslipPdf(payslip, employee, business, lineItem) {
   const empName = employee ? `${employee.first_name || ""} ${employee.last_name || ""}`.trim() : "—";
   const employerName = business?.trading_name || business?.name || "—";
 
-  // ---- Header band ----
-  doc.setFillColor(...NAVY);
-  doc.rect(0, 0, W, 26, "F");
-  // emerald accent stripe
-  doc.setFillColor(...EMERALD);
-  doc.rect(0, 26, W, 1.2, "F");
+  // ---- Header band (white, so the navy logo text stays readable) ----
+  doc.setFillColor(255, 255, 255);
+  doc.rect(0, 0, W, 30, "F");
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text("PayFlow SA", M, 11);
+  const logo = await loadLogo();
+  if (logo?.dataUrl) {
+    const ar = logo.w / logo.h;
+    const maxW = 64, maxH = 17;
+    let lw = maxW, lh = lw / ar;
+    if (lh > maxH) { lh = maxH; lw = lh * ar; }
+    const lx = M;
+    const ly = 6 + (maxH - lh) / 2;
+    doc.addImage(logo.dataUrl, "PNG", lx, ly, lw, lh, undefined, "FAST");
+  } else {
+    doc.setTextColor(...NAVY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("PayFlow SA", M, 15);
+  }
+
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.text("EMPLOYEE PAYSLIP", M, 17);
-  doc.setTextColor(180, 195, 210);
-  doc.text("Employee Self-Service", M, 21);
+  doc.setFontSize(7);
+  doc.setTextColor(...MUTED);
+  doc.text("EMPLOYEE PAYSLIP", M, 27);
 
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(...NAVY);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.text(employerName, W - M, 11, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.setTextColor(180, 195, 210);
+  doc.setTextColor(...MUTED);
   if (business?.registration_number) doc.text(`Reg: ${business.registration_number}`, W - M, 16, { align: "right" });
   if (business?.paye_reference) doc.text(`PAYE: ${business.paye_reference}`, W - M, 20, { align: "right" });
+
+  // emerald accent stripe under the header
+  doc.setFillColor(...EMERALD);
+  doc.rect(0, 30, W, 1.5, "F");
 
   // ---- Employer / Employee details ----
   let y = 34;
@@ -318,7 +360,7 @@ export async function ensurePayslipPdf({ payslip, employee, business, lineItem }
     }
 
     // 3. Generate the PDF (authoritative stored values only)
-    const pdfDoc = buildPayslipPdf(payslip, employee, business, li);
+    const pdfDoc = await buildPayslipPdf(payslip, employee, business, li);
     const blob = pdfDoc.output("blob");
     const file = new File([blob], file_name, { type: MIME });
 
