@@ -41,6 +41,7 @@ export default function Login() {
       icon={LogIn}
       title="Welcome back"
       subtitle="Log in to your account"
+      backgroundImage="https://media.base44.com/images/public/6a79f98d1819f6eb65f3659e/72afe97c0_SouthAfricanPayrollGrowthSunrise.png"
       footer={
         <>
           Don't have an account?{" "}
