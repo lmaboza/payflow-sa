@@ -1,0 +1,124 @@
+{
+  "name": "PayrollQuery",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "title": "Employee Name"
+    },
+    "reference_number": {
+      "type": "string",
+      "title": "Reference Number"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "payslip",
+        "paye",
+        "deduction",
+        "leave",
+        "banking",
+        "incorrect",
+        "other"
+      ],
+      "default": "other",
+      "title": "Category"
+    },
+    "subject": {
+      "type": "string",
+      "title": "Subject"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "resolved",
+        "closed"
+      ],
+      "default": "open",
+      "title": "Status"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "type": "string"
+          },
+          "author_role": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "attachment_url": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "default": [],
+      "title": "Messages"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "category",
+    "subject"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.employee_id": "{{user.data.employee_id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

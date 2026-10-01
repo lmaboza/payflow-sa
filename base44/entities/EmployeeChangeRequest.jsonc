@@ -1,0 +1,106 @@
+{
+  "name": "EmployeeChangeRequest",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "title": "Employee Name"
+    },
+    "section": {
+      "type": "string",
+      "enum": [
+        "personal",
+        "contact",
+        "employment",
+        "tax",
+        "banking"
+      ],
+      "default": "personal",
+      "title": "Section"
+    },
+    "field": {
+      "type": "string",
+      "title": "Field"
+    },
+    "field_label": {
+      "type": "string",
+      "title": "Field Label"
+    },
+    "previous_value": {
+      "type": "string",
+      "title": "Previous Value"
+    },
+    "new_value": {
+      "type": "string",
+      "title": "New Value"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "applied"
+      ],
+      "default": "pending",
+      "title": "Status"
+    },
+    "decided_by": {
+      "type": "string",
+      "title": "Decided By"
+    },
+    "decision_note": {
+      "type": "string",
+      "title": "Decision Note"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "section",
+    "field",
+    "new_value"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.employee_id": "{{user.data.employee_id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

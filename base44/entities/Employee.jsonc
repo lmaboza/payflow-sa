@@ -6,6 +6,10 @@
       "type": "string",
       "title": "Business"
     },
+    "user_id": {
+      "type": "string",
+      "title": "Linked App User"
+    },
     "employee_number": {
       "type": "string",
       "title": "Employee Number"
@@ -187,5 +191,34 @@
     "first_name",
     "last_name",
     "employee_number"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

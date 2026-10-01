@@ -26,6 +26,17 @@ import Compliance from '@/pages/Compliance';
 import Documents from '@/pages/Documents';
 import Settings from '@/pages/Settings';
 import AuditLog from '@/pages/AuditLog';
+import EmployeeLayout from '@/components/portal/EmployeeLayout';
+import EmployeeDashboard from '@/pages/portal/EmployeeDashboard';
+import EmployeePayslips from '@/pages/portal/EmployeePayslips';
+import EmployeePayslipDetail from '@/pages/portal/EmployeePayslipDetail';
+import EmployeeLeave from '@/pages/portal/EmployeeLeave';
+import EmployeeTaxDocuments from '@/pages/portal/EmployeeTaxDocuments';
+import EmployeeClaims from '@/pages/portal/EmployeeClaims';
+import EmployeeDocuments from '@/pages/portal/EmployeeDocuments';
+import EmployeeMyDetails from '@/pages/portal/EmployeeMyDetails';
+import EmployeePayrollQueries from '@/pages/portal/EmployeePayrollQueries';
+import EmployeeNotifications from '@/pages/portal/EmployeeNotifications';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -72,6 +83,18 @@ const AuthenticatedApp = () => {
           <Route path="/documents" element={<Documents />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/audit" element={<AuditLog />} />
+        </Route>
+        <Route path="/portal" element={<EmployeeLayout />}>
+          <Route index element={<EmployeeDashboard />} />
+          <Route path="payslips" element={<EmployeePayslips />} />
+          <Route path="payslips/:id" element={<EmployeePayslipDetail />} />
+          <Route path="leave" element={<EmployeeLeave />} />
+          <Route path="tax-documents" element={<EmployeeTaxDocuments />} />
+          <Route path="claims" element={<EmployeeClaims />} />
+          <Route path="documents" element={<EmployeeDocuments />} />
+          <Route path="profile" element={<EmployeeMyDetails />} />
+          <Route path="queries" element={<EmployeePayrollQueries />} />
+          <Route path="notifications" element={<EmployeeNotifications />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

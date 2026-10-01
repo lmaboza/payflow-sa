@@ -1,5 +1,5 @@
 {
-  "name": "EmployeeDocument",
+  "name": "EmployeeNotification",
   "type": "object",
   "properties": {
     "business_id": {
@@ -10,38 +10,43 @@
       "type": "string",
       "title": "Employee"
     },
-    "name": {
-      "type": "string",
-      "title": "Document Name"
-    },
     "type": {
       "type": "string",
       "enum": [
-        "contract",
-        "id",
-        "tax",
-        "bank",
-        "payslip",
-        "other"
+        "payslip_available",
+        "salary_processed",
+        "leave_approved",
+        "leave_rejected",
+        "tax_document",
+        "claim_status",
+        "query_response",
+        "detail_change"
       ],
-      "default": "other",
       "title": "Type"
     },
-    "file_url": {
+    "title": {
       "type": "string",
-      "title": "File URL"
+      "title": "Title"
     },
-    "uploaded_date": {
+    "message": {
       "type": "string",
-      "format": "date-time",
-      "title": "Uploaded Date"
+      "title": "Message"
+    },
+    "link": {
+      "type": "string",
+      "title": "Link"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "title": "Read"
     }
   },
   "required": [
     "business_id",
     "employee_id",
-    "name",
-    "file_url"
+    "type",
+    "title"
   ],
   "rls": {
     "read": {
@@ -62,9 +67,16 @@
       }
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "user_condition": {

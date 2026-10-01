@@ -1,0 +1,87 @@
+{
+  "name": "LeaveBalance",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "annual_total": {
+      "type": "number",
+      "default": 0,
+      "title": "Annual Leave Total"
+    },
+    "annual_used": {
+      "type": "number",
+      "default": 0,
+      "title": "Annual Leave Used"
+    },
+    "sick_total": {
+      "type": "number",
+      "default": 0,
+      "title": "Sick Leave Total"
+    },
+    "sick_used": {
+      "type": "number",
+      "default": 0,
+      "title": "Sick Leave Used"
+    },
+    "family_total": {
+      "type": "number",
+      "default": 0,
+      "title": "Family Responsibility Total"
+    },
+    "family_used": {
+      "type": "number",
+      "default": 0,
+      "title": "Family Responsibility Used"
+    },
+    "study_total": {
+      "type": "number",
+      "default": 0,
+      "title": "Study Leave Total"
+    },
+    "study_used": {
+      "type": "number",
+      "default": 0,
+      "title": "Study Leave Used"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

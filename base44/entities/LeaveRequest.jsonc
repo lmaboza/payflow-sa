@@ -1,0 +1,123 @@
+{
+  "name": "LeaveRequest",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "title": "Employee Name"
+    },
+    "leave_type": {
+      "type": "string",
+      "enum": [
+        "annual",
+        "sick",
+        "family_responsibility",
+        "unpaid",
+        "study",
+        "maternity",
+        "other"
+      ],
+      "default": "annual",
+      "title": "Leave Type"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Start Date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "title": "End Date"
+    },
+    "days": {
+      "type": "number",
+      "default": 1,
+      "title": "Days"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending",
+        "approved",
+        "rejected",
+        "cancelled"
+      ],
+      "default": "pending",
+      "title": "Status"
+    },
+    "reason": {
+      "type": "string",
+      "title": "Reason"
+    },
+    "supporting_document_url": {
+      "type": "string",
+      "title": "Supporting Document"
+    },
+    "decided_by": {
+      "type": "string",
+      "title": "Decided By"
+    },
+    "decision_note": {
+      "type": "string",
+      "title": "Decision Note"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "leave_type",
+    "start_date",
+    "end_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.employee_id": "{{user.data.employee_id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

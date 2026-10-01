@@ -102,6 +102,10 @@ export default function Layout() {
     );
   }
 
+  if (user?.app_role === "employee") {
+    if (!location.pathname.startsWith("/portal")) return <Navigate to="/portal" replace />;
+  }
+
   if (!business || !business.onboarding_complete) {
     if (location.pathname !== "/onboarding") return <Navigate to="/onboarding" replace />;
   }

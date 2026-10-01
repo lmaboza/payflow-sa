@@ -1,0 +1,118 @@
+{
+  "name": "Claim",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "employee_name": {
+      "type": "string",
+      "title": "Employee Name"
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": [
+        "travel",
+        "medical",
+        "phone",
+        "equipment",
+        "training",
+        "other"
+      ],
+      "default": "other",
+      "title": "Claim Type"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+    },
+    "amount": {
+      "type": "number",
+      "default": 0,
+      "title": "Amount (ZAR)"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "paid"
+      ],
+      "default": "submitted",
+      "title": "Status"
+    },
+    "document_url": {
+      "type": "string",
+      "title": "Supporting Document"
+    },
+    "decided_by": {
+      "type": "string",
+      "title": "Decided By"
+    },
+    "decision_note": {
+      "type": "string",
+      "title": "Decision Note"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "claim_type",
+    "date",
+    "amount"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "data.employee_id": "{{user.data.employee_id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
