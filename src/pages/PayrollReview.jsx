@@ -14,6 +14,7 @@ import { formatZAR, formatDate } from "@/lib/format";
 import { payrollStatusMeta } from "@/lib/status";
 import { can } from "@/lib/permissions";
 import { validatePayroll, calculatePayroll, approvePayroll } from "@/lib/payrollEngine";
+import { generatePayslipPdfsForRun } from "@/lib/payslipPdf";
 import {
   ArrowLeft, CheckCircle2, AlertTriangle, ServerCrash, Loader2, Search,
   ShieldCheck, Calculator, BadgeCheck, Lock, ArrowRight
@@ -168,6 +169,8 @@ export default function PayrollReview() {
         );
       }
       await base44.entities.PayrollRun.update(id, { status: "completed" });
+      // Best-effort payslip PDF generation — failure-isolated, never affects payroll status/calculations
+      generatePayslipPdfsForRun(id, business.id).catch((err) => console.error("[PayFlow] batch payslip PDF generation failed", err));
       await logAudit(business.id, user, "payroll_completed", "PayrollRun", id, { status: run.status }, { status: "completed" });
       setRun((r) => ({ ...r, status: "completed" }));
       toast({ title: "Payroll completed", description: "Payslips generated." });

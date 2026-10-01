@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { useToast } from "@/components/ui/use-toast";
-import { generatePayslip } from "@/lib/payrollEngine";
+import { downloadPayslipPdf, sharePayslipPdfViaWhatsApp } from "@/lib/payslipPdf";
 import { base44 } from "@/api/base44Client";
 import { formatZAR, formatDate } from "@/lib/format";
 import {
@@ -119,21 +119,20 @@ export default function EmployeePayslipDetail() {
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const data = await generatePayslip(business?.id, { payslip_id: payslip.id, employee_id: employee.id, payroll_run_id: payslip.payroll_run_id });
-      if (data.status === "ok" && (data.pdf_url || data.url)) {
-        window.open(data.pdf_url || data.url, "_blank");
+      const result = await downloadPayslipPdf({ payslip, employee, business, lineItem });
+      if (result.ok) {
+        /* PDF opened in a new tab */
+      } else if (result.status === "generating") {
+        toast({ title: "Preparing payslip", description: result.message });
       } else {
-        toast({ variant: "destructive", title: "PDF unavailable", description: data.message || "The Payroll Engine could not generate the PDF." });
+        toast({ variant: "destructive", title: "PDF unavailable", description: result.message || "Unable to generate your payslip PDF." });
       }
     } catch (e) {
-      toast({ variant: "destructive", title: "PDF unavailable", description: e.message });
+      toast({ variant: "destructive", title: "PDF unavailable", description: "Unable to generate your payslip PDF." });
     } finally { setDownloading(false); }
   };
 
-  const shareWhatsApp = () => {
-    const msg = encodeURIComponent(`Hi, my payslip for ${formatDate(payslip.pay_period_start)} – ${formatDate(payslip.pay_period_end)} is available on PayFlow SA.`);
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
-  };
+  const shareWhatsApp = () => sharePayslipPdfViaWhatsApp({ payslip, employee, business });
 
   return (
     <div>

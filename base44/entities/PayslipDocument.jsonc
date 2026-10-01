@@ -1,0 +1,121 @@
+{
+  "name": "PayslipDocument",
+  "type": "object",
+  "properties": {
+    "business_id": {
+      "type": "string",
+      "title": "Business"
+    },
+    "employee_id": {
+      "type": "string",
+      "title": "Employee"
+    },
+    "payroll_run_id": {
+      "type": "string",
+      "title": "Payroll Run"
+    },
+    "payslip_id": {
+      "type": "string",
+      "title": "Payslip"
+    },
+    "pay_period": {
+      "type": "string",
+      "title": "Pay Period"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "payslip"
+      ],
+      "default": "payslip",
+      "title": "Document Type"
+    },
+    "file_name": {
+      "type": "string",
+      "title": "File Name"
+    },
+    "file_uri": {
+      "type": "string",
+      "title": "Stored File URI"
+    },
+    "file_size": {
+      "type": "integer",
+      "default": 0,
+      "title": "File Size (bytes)"
+    },
+    "mime_type": {
+      "type": "string",
+      "default": "application/pdf",
+      "title": "MIME Type"
+    },
+    "generation_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "generating",
+        "available",
+        "failed"
+      ],
+      "default": "pending",
+      "title": "Generation Status"
+    },
+    "generation_error": {
+      "type": "string",
+      "title": "Generation Error"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Generated At"
+    }
+  },
+  "required": [
+    "business_id",
+    "employee_id",
+    "payslip_id",
+    "file_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.employee_id": "{{user.data.employee_id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

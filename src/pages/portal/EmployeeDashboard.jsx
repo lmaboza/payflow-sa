@@ -12,8 +12,7 @@ import RecentPayslips from "@/components/portal/dashboard/RecentPayslips";
 import RecentActivity from "@/components/portal/dashboard/RecentActivity";
 import UpcomingItems from "@/components/portal/dashboard/UpcomingItems";
 import { useToast } from "@/components/ui/use-toast";
-import { generatePayslip } from "@/lib/payrollEngine";
-import { formatZAR } from "@/lib/format";
+import { downloadPayslipPdf } from "@/lib/payslipPdf";
 import { base44 } from "@/api/base44Client";
 
 function greeting() {
@@ -97,15 +96,16 @@ export default function EmployeeDashboard() {
     if (!target) return;
     if (p) setDownloadingId(p.id); else setDownloading(true);
     try {
-      const data = await generatePayslip(business?.id, { payslip_id: target.id, employee_id: employee.id, payroll_run_id: target.payroll_run_id });
-      if (data.status === "ok" && (data.pdf_url || data.url)) {
-        window.open(data.pdf_url || data.url, "_blank");
-        toast({ title: "Payslip PDF generated" });
+      const result = await downloadPayslipPdf({ payslip: target, employee, business });
+      if (result.ok) {
+        toast({ title: "Payslip PDF ready" });
+      } else if (result.status === "generating") {
+        toast({ title: "Preparing payslip", description: result.message });
       } else {
-        toast({ variant: "destructive", title: "Payslip PDF unavailable", description: data.message || "The Payroll Engine could not generate the PDF." });
+        toast({ variant: "destructive", title: "Payslip PDF unavailable", description: result.message || "Unable to generate your payslip PDF." });
       }
     } catch (e) {
-      toast({ variant: "destructive", title: "Payslip PDF unavailable", description: e.message });
+      toast({ variant: "destructive", title: "Payslip PDF unavailable", description: "Unable to generate your payslip PDF." });
     } finally {
       if (p) setDownloadingId(null); else setDownloading(false);
     }

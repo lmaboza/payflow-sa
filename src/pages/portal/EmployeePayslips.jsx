@@ -9,7 +9,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import EmptyState from "@/components/EmptyState";
 import { useToast } from "@/components/ui/use-toast";
-import { generatePayslip } from "@/lib/payrollEngine";
+import { downloadPayslipPdf } from "@/lib/payslipPdf";
 import { base44 } from "@/api/base44Client";
 import { formatZAR, formatDate } from "@/lib/format";
 import { ReceiptText, Eye, Download, MessageCircle, Loader2 } from "lucide-react";
@@ -53,15 +53,12 @@ export default function EmployeePayslips() {
   const handleDownload = async (p) => {
     setDownloadingId(p.id);
     try {
-      const data = await generatePayslip(business?.id, { payslip_id: p.id, employee_id: employee.id, payroll_run_id: p.payroll_run_id });
-      if (data.status === "ok" && (data.pdf_url || data.url)) {
-        window.open(data.pdf_url || data.url, "_blank");
-        toast({ title: "Payslip PDF generated" });
-      } else {
-        toast({ variant: "destructive", title: "Payslip PDF unavailable", description: data.message || "The Payroll Engine could not generate the PDF." });
-      }
+      const result = await downloadPayslipPdf({ payslip: p, employee, business });
+      if (result.ok) toast({ title: "Payslip PDF ready" });
+      else if (result.status === "generating") toast({ title: "Preparing payslip", description: result.message });
+      else toast({ variant: "destructive", title: "Payslip PDF unavailable", description: result.message || "Unable to generate your payslip PDF." });
     } catch (e) {
-      toast({ variant: "destructive", title: "Payslip PDF unavailable", description: e.message });
+      toast({ variant: "destructive", title: "Payslip PDF unavailable", description: "Unable to generate your payslip PDF." });
     } finally { setDownloadingId(null); }
   };
 
